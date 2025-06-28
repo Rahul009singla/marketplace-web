@@ -15,7 +15,7 @@ print("✅ Loaded MONGO_URI:", os.getenv("MONGO_URI"))
 
 # Stripe setup
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-YOUR_DOMAIN = "http://localhost:5000"
+YOUR_DOMAIN = os.getenv("YOUR_DOMAIN")
 
 app = Flask(__name__)
 app.secret_key = 'secret123'

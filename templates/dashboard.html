@@ -27,10 +27,10 @@
     <hr>
     <h3>Buy Upvote Packages</h3>
     <ul>
-        <li>10 Upvotes - $1.00 <a href="/buy/1">Buy</a></li>
-        <li>20 Upvotes - $2.00 <a href="/buy/2">Buy</a></li>
-        <li>50 Upvotes - $5.00 <a href="/buy/5">Buy</a></li>
-    </ul>
+        <li>10 Upvotes - $1.00 <a href="{{ url_for('buy', amount=1) }}">Buy</a></li>
+        <li>20 Upvotes - $2.00 <a href="{{ url_for('buy', amount=2) }}">Buy</a></li>
+        <li>50 Upvotes - $5.00 <a href="{{ url_for('buy', amount=5) }}">Buy</a></li>
+
 
     <hr>
     {% if notifications %}
