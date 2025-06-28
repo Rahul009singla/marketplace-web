@@ -2,52 +2,44 @@
 <html>
 <head>
     <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>Welcome Admin</h2>
-    <a href="{{ url_for('admin_logout') }}">Logout</a>
-    <hr>
-<h3>Admin Notifications</h3>
-<form action="{{ url_for('clear_admin_notifications') }}" method="POST">
-    <button type="submit">🗑️ Clear Notifications</button>
-</form>
+<body class="bg-light">
 
-{% if notifications %}
-    <ul>
-        {% for note in notifications %}
-            <li>{{ note.message }} <small>({{ note.timestamp }})</small></li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No notifications yet.</p>
-{% endif %}
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h1 class="display-5 text-primary">🛠️ Admin Dashboard</h1>
+        {% if msg %}
+            <div class="alert alert-success mt-3">{{ msg }}</div>
+        {% endif %}
+    </div>
 
-    <hr>
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-dark text-white">
+            <h4>Order Management</h4>
+        </div>
+        <div class="card-body">
+            <div class="d-grid gap-3">
+                <a href="{{ url_for('view_pending_orders') }}" class="btn btn-warning">⏳ View Pending Orders</a>
+                <a href="{{ url_for('approved_orders') }}" class="btn btn-success">✅ Approved Orders</a>
+                <a href="{{ url_for('rejected_orders') }}" class="btn btn-danger">❌ Rejected Orders</a>
+            </div>
+        </div>
+    </div>
 
-    <!-- ✅ Pending Orders -->
-    <h3>Pending Orders (Awaiting Admin Action)</h3>
-    {% if orders %}
-        <ul>
-        {% for order in orders %}
-            <li>
-                <strong>Order ID:</strong> {{ order.order_id }}<br>
-                <strong>User ID:</strong> {{ order.telegram_id }}<br>
-                <strong>Amount:</strong> {{ order.amount }}<br>
-                <strong>Status:</strong> {{ order.status }}<br>
-                <strong>Post URL:</strong> 
-                {% if order.post_url %}
-                    <a href="{{ order.post_url }}" target="_blank">{{ order.post_url }}</a><br>
-                {% else %}
-                    <em>No URL submitted</em><br>
-                {% endif %}
-                <a href="{{ url_for('admin_decision', order_id=order.order_id, action='approve') }}">✅ Approve</a> |
-                <a href="{{ url_for('admin_decision', order_id=order.order_id, action='reject') }}">❌ Reject</a>
-                <hr>
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No pending orders.</p>
-    {% endif %}
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-info text-white">
+            <h4>Manual URL Submission</h4>
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('assign_order_manual') }}" class="btn btn-outline-info w-100">📤 Assign Post URL Manually</a>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="/logout" class="btn btn-outline-dark">🚪 Logout</a>
+    </div>
+</div>
+
 </body>
 </html>

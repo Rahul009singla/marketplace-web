@@ -42,7 +42,7 @@ def generate_credentials():
     return username, password
 
 # Home/Login route
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         telegram_id_input = request.form['telegram_id']
@@ -70,6 +70,11 @@ def login():
         return redirect(url_for('dashboard'))
 
     return render_template('login.html')
+
+@app.route('/')
+def welcome():
+    return render_template('welcome.html')
+
 
 # Dashboard route
 @app.route('/dashboard')
@@ -411,6 +416,51 @@ def clear_admin_notifications():
     )
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/pending')
+def view_pending_orders():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    pending_orders = list(db.orders.find({"status": "pending"}))
+    return render_template('pending_orders.html', orders=pending_orders)
+
+@app.route('/admin/assign', methods=['GET', 'POST'])
+def assign_order_manual():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    users_list = list(db.users.find({}))
+
+    if request.method == 'POST':
+        telegram_id = int(request.form['telegram_id'])
+        post_url = request.form['post_url']
+        amount = float(request.form['amount'])
+
+        # Create new order
+        order = {
+            "order_id": str(uuid.uuid4())[:8],
+            "telegram_id": telegram_id,
+            "url": post_url,
+            "amount": amount,
+            "status": "approved",
+            "timestamp": datetime.utcnow()
+        }
+        db.orders.insert_one(order)
+
+        # Notify user
+        db.users.update_one(
+            {"telegram_id": telegram_id},
+            {"$push": {
+                "notifications": {
+                    "message": f"✅ Your manual order has been approved by admin.",
+                    "timestamp": datetime.utcnow()
+                }}
+            }
+        )
+
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('assign_order.html', users=users_list)
 
 
 if __name__ == '__main__':
