@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to Your Dashboard</h1>
+
+    {% if msg %}
+        <p style="color: green;">{{ msg }}</p>
+    {% endif %}
+
+    <h3>Your Credentials</h3>
+    <ul>
+        <li><strong>Username:</strong> {{ user.username }}</li>
+        <li><strong>Telegram ID:</strong> {{ user.telegram_id }}</li>
+        <li><strong>Wallet Balance:</strong> ${{ user.wallet }}</li>
+    </ul>
+
+    <hr>
+    <h3>Your Orders</h3>
+    <ul>
+        <li><a href="{{ url_for('approved_orders') }}">✅ View Approved Orders</a></li>
+        <li><a href="{{ url_for('rejected_orders') }}">❌ View Rejected Orders</a></li>
+    </ul>
+
+    <hr>
+    <h3>Buy Upvote Packages</h3>
+    <ul>
+        <li>10 Upvotes - $1.00 <a href="/buy/1">Buy</a></li>
+        <li>20 Upvotes - $2.00 <a href="/buy/2">Buy</a></li>
+        <li>50 Upvotes - $5.00 <a href="/buy/5">Buy</a></li>
+    </ul>
+
+    <hr>
+    {% if notifications %}
+        <h3>Notifications</h3>
+        <ul>
+            {% for note in notifications %}
+                {% if note.timestamp %}
+                    <li>{{ note.message }} <small>({{ note.timestamp.strftime('%Y-%m-%d %H:%M') }})</small></li>
+                {% else %}
+                    <li>{{ note }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <form action="{{ url_for('clear_notifications') }}" method="POST">
+            <button type="submit">Clear All Notifications</button>
+        </form>
+        <hr>
+    {% endif %}
+<form action="{{ url_for('clear_notifications') }}" method="POST">
+    <button type="submit">Clear All Notifications</button>
+</form>
+    <h3>Wallet: ${{ user.wallet }}</h3>
+    <a href="{{ url_for('recharge') }}">Recharge Wallet</a>
+
+    <br><br>
+    <a href="/logout">Logout</a>
+</body>
+</html>

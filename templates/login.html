@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Marketplace Bot</title>
+</head>
+<body>
+    <h2>Welcome to Marketplace Web</h2>
+    <form method="POST">
+        <label>Enter your Telegram ID:</label>
+        <input type="text" name="telegram_id" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <hr>
+
+    <p><a href="{{ url_for('admin_login') }}">🔐 Admin Login</a></p>
+</body>
+</html>

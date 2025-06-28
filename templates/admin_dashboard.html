@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h2>Welcome Admin</h2>
+    <a href="{{ url_for('admin_logout') }}">Logout</a>
+    <hr>
+<h3>Admin Notifications</h3>
+<form action="{{ url_for('clear_admin_notifications') }}" method="POST">
+    <button type="submit">🗑️ Clear Notifications</button>
+</form>
+
+{% if notifications %}
+    <ul>
+        {% for note in notifications %}
+            <li>{{ note.message }} <small>({{ note.timestamp }})</small></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No notifications yet.</p>
+{% endif %}
+
+    <hr>
+
+    <!-- ✅ Pending Orders -->
+    <h3>Pending Orders (Awaiting Admin Action)</h3>
+    {% if orders %}
+        <ul>
+        {% for order in orders %}
+            <li>
+                <strong>Order ID:</strong> {{ order.order_id }}<br>
+                <strong>User ID:</strong> {{ order.telegram_id }}<br>
+                <strong>Amount:</strong> {{ order.amount }}<br>
+                <strong>Status:</strong> {{ order.status }}<br>
+                <strong>Post URL:</strong> 
+                {% if order.post_url %}
+                    <a href="{{ order.post_url }}" target="_blank">{{ order.post_url }}</a><br>
+                {% else %}
+                    <em>No URL submitted</em><br>
+                {% endif %}
+                <a href="{{ url_for('admin_decision', order_id=order.order_id, action='approve') }}">✅ Approve</a> |
+                <a href="{{ url_for('admin_decision', order_id=order.order_id, action='reject') }}">❌ Reject</a>
+                <hr>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No pending orders.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rejected Orders</title>
+</head>
+<body>
+    <h2>❌ Rejected Orders</h2>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    <hr>
+
+    {% if orders %}
+        <ul>
+        {% for order in orders %}
+            <li>
+                <strong>Order ID:</strong> {{ order.order_id }} |
+                <strong>Amount:</strong> ${{ order.amount }} |
+                <strong>Status:</strong> {{ order.status }}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No rejected orders.</p>
+    {% endif %}
+</body>
+</html>

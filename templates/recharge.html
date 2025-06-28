@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Recharge Wallet</title></head>
+<body>
+    <h2>Recharge Wallet</h2>
+    <form method="post">
+        <label>Enter amount (USD):</label>
+        <input type="number" name="amount" required>
+        <button type="submit">Recharge</button>
+    </form>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

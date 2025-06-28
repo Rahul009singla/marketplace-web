@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Approved Orders</title>
+</head>
+<body>
+    <h2>✅ Approved Orders</h2>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    <hr>
+
+    {% if orders %}
+        <ul>
+        {% for order in orders %}
+            <li>
+                <strong>Order ID:</strong> {{ order.order_id }} |
+                <strong>Amount:</strong> ${{ order.amount }} |
+                <strong>Status:</strong> {{ order.status }}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No approved orders yet.</p>
+    {% endif %}
+</body>
+</html>
