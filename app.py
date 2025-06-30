@@ -149,48 +149,48 @@ def submit_url(order_id):
     return "🚧 Submitting post URLs is currently disabled. Please wait for this feature to be activated."
 
 
-@app.route('/recharge')
+@app.route('/recharge', methods=['GET', 'POST'])
 def recharge():
-    try:
-        telegram_id = session.get("telegram_id")
-        user = users.find_one({"telegram_id": telegram_id})
-        if not user:
-            return redirect(url_for('login'))
+    if 'telegram_id' not in session:
+        return redirect(url_for('login'))
 
-        amount_dollars = 1.00
-        YOUR_DOMAIN = os.getenv("YOUR_DOMAIN", "http://localhost:5000")
-        print("✅ Charging from domain:", YOUR_DOMAIN)
+    if request.method == 'POST':
+        try:
+            telegram_id = session.get("telegram_id")
+            amount_dollars = float(request.form['amount'])  # ✅ Read user input from form
 
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': 'Wallet Recharge',
+            if amount_dollars < 1:
+                return "❌ Minimum amount is $1", 400
+
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': f'Wallet Recharge: ${amount_dollars}',
+                        },
+                        'unit_amount': int(amount_dollars * 100),  # Stripe uses cents
                     },
-                    'unit_amount': int(amount_dollars * 100),
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            success_url=f"{YOUR_DOMAIN}/wallet_success?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{YOUR_DOMAIN}/cancel",
-            metadata={
-                "telegram_id": telegram_id,
-                "amount": str(int(amount_dollars))  # ✅ Fix: included
-            }
-        )
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=f"{YOUR_DOMAIN}/wallet_success?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=f"{YOUR_DOMAIN}/dashboard",
+                metadata={
+                    "telegram_id": telegram_id,
+                    "amount": str(int(amount_dollars))  # Pass amount back via metadata
+                }
+            )
 
-        print("✅ Stripe Session created:", checkout_session.url)
-        return redirect(checkout_session.url)
+            return redirect(checkout_session.url)
 
-    except Exception as e:
-        print("❌ Error in /recharge:", e)
-        return "An error occurred while trying to create the Stripe session.", 500
+        except Exception as e:
+            print("❌ Error in /recharge POST:", e)
+            return "An error occurred while processing your payment.", 500
 
-
-
+    # Show form when method is GET
+    return render_template("recharge.html")
 
 
 @app.route('/success')
@@ -469,4 +469,3 @@ def assign_order_manual():
 if __name__ == '__main__':
     print("✅ Flask app is starting...")
     app.run(debug=True)
-
