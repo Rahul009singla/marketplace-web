@@ -174,10 +174,11 @@ def recharge():
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=f"{YOUR_DOMAIN}/success?session_id={{CHECKOUT_SESSION_ID}}",
+            success_url=f"{YOUR_DOMAIN}/wallet_success?session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{YOUR_DOMAIN}/cancel",
             metadata={
-                "telegram_id": telegram_id
+                "telegram_id": telegram_id,
+                "amount": str(int(amount_dollars))  # ✅ Fix: included
             }
         )
 
@@ -187,6 +188,9 @@ def recharge():
     except Exception as e:
         print("❌ Error in /recharge:", e)
         return "An error occurred while trying to create the Stripe session.", 500
+
+
+
 
 
 @app.route('/success')
