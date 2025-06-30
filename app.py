@@ -149,34 +149,45 @@ def submit_url(order_id):
     return "🚧 Submitting post URLs is currently disabled. Please wait for this feature to be activated."
 
 
-@app.route('/recharge', methods=['GET', 'POST'])
+@app.route('/recharge')
 def recharge():
-    if 'telegram_id' not in session:
-        return redirect(url_for('login'))
+    try:
+        telegram_id = session.get("telegram_id")
+        user = users.find_one({"telegram_id": telegram_id})
+        if not user:
+            return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        amount = int(request.form['amount'])
+        amount_dollars = 1.00
+        YOUR_DOMAIN = os.getenv("YOUR_DOMAIN", "http://localhost:5000")
+        print("✅ Charging from domain:", YOUR_DOMAIN)
+
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
                 'price_data': {
                     'currency': 'usd',
-                    'product_data': {'name': f'Wallet Recharge: ${amount}'},
-                    'unit_amount': amount * 100,
+                    'product_data': {
+                        'name': 'Wallet Recharge',
+                    },
+                    'unit_amount': int(amount_dollars * 100),
                 },
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=f'{YOUR_DOMAIN}/wallet_success?session_id={{CHECKOUT_SESSION_ID}}',
-            cancel_url=f'{YOUR_DOMAIN}/dashboard',
+            success_url=f"{YOUR_DOMAIN}/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{YOUR_DOMAIN}/cancel",
             metadata={
-                "telegram_id": session['telegram_id'],
-                "amount": amount
+                "telegram_id": telegram_id
             }
         )
+
+        print("✅ Stripe Session created:", checkout_session.url)
         return redirect(checkout_session.url)
 
-    return render_template("recharge.html")
+    except Exception as e:
+        print("❌ Error in /recharge:", e)
+        return "An error occurred while trying to create the Stripe session.", 500
+
 
 @app.route('/success')
 def success():
