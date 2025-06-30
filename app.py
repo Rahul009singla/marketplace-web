@@ -162,14 +162,17 @@ def recharge():
                 'price_data': {
                     'currency': 'usd',
                     'product_data': {'name': f'Wallet Recharge: ${amount}'},
-                    'unit_amount': amount * 100,  # Stripe uses cents
+                    'unit_amount': amount * 100,
                 },
                 'quantity': 1,
             }],
             mode='payment',
             success_url=f'{YOUR_DOMAIN}/wallet_success?session_id={{CHECKOUT_SESSION_ID}}',
             cancel_url=f'{YOUR_DOMAIN}/dashboard',
-            metadata={"telegram_id": session['telegram_id'], "amount": amount}
+            metadata={
+                "telegram_id": session['telegram_id'],
+                "amount": amount
+            }
         )
         return redirect(checkout_session.url)
 
@@ -332,39 +335,7 @@ def rejected_orders():
     orders = list(db.orders.find({"telegram_id": session['telegram_id'], "status": "rejected"}))
     return render_template('rejected_orders.html', orders=orders)
 
-@app.route('/webhook', methods=['POST'])
-def stripe_webhook():
-    payload = request.data
-    sig_header = request.headers.get('stripe-signature')
-    endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
 
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-    except ValueError:
-        return 'Invalid payload', 400
-    except stripe.error.SignatureVerificationError:
-        return 'Invalid signature', 400
-
-    if event['type'] == 'checkout.session.completed':
-        session_data = event['data']['object']
-        telegram_id = int(session_data['metadata']['telegram_id'])
-        amount = int(session_data['metadata']['amount'])
-
-        # Add amount to wallet
-        users.update_one(
-            {"telegram_id": telegram_id},
-            {"$inc": {"wallet": amount}}
-        )
-
-        # Optional: store recharge logs
-        db.recharges.insert_one({
-            "telegram_id": telegram_id,
-            "amount": amount,
-            "timestamp": datetime.utcnow(),
-            "session_id": session_data['id']
-        })
-
-    return '', 200
 
 @app.route('/wallet_success')
 def wallet_success():
@@ -382,17 +353,34 @@ def wallet_success():
         telegram_id = int(session_data.metadata['telegram_id'])
         amount = int(session_data.metadata['amount'])
 
-        # Update wallet balance in DB
+        # Update wallet
+        user = db.users.find_one({"telegram_id": telegram_id})
+        if not user:
+            return "❌ User not found", 404
+
+        new_balance = user.get('wallet', 0) + amount
         db.users.update_one(
             {"telegram_id": telegram_id},
-            {"$inc": {"wallet": amount}}
+            {"$set": {"wallet": new_balance}}
         )
 
-        # Redirect to dashboard with success message
-        return redirect(url_for('dashboard', msg='✅ Wallet recharged successfully!'))
+        # Optional: add a notification in DB
+        db.users.update_one(
+            {"telegram_id": telegram_id},
+            {"$push": {
+                "notifications": {
+                    "message": f"✅ Your wallet was recharged with ${amount}.",
+                    "timestamp": datetime.utcnow()
+                }
+            }}
+        )
+
+        # Show confirmation on the website
+        return render_template('payment_success.html', username=user['username'], amount=amount, balance=new_balance)
 
     except Exception as e:
         return f"❌ Error: {str(e)}", 500
+
 
 @app.route('/clear_notifications', methods=['POST'])
 def clear_notifications():
