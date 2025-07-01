@@ -9,24 +9,21 @@ import stripe
 import uuid
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+import json
 
-# Load the model only once
+# Load model
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Your FAQ base data (feel free to expand it)
-faq_data = [
-    ("What payment methods are supported?", "We support Stripe for credit/debit card payments."),
-    ("Can I pay with PayPal or crypto?", "Currently we only support Stripe."),
-    ("How do I recharge?", "Go to Recharge Wallet, enter the amount, and pay via Stripe."),
-    ("How to order?", "Choose an upvote package, enter your Reddit link, and submit."),
-    ("What's the refund policy?", "If we reject your order, the amount is refunded to your wallet.")
-]
+# Load data
+with open('faq_data.json') as f:
+    raw_data = json.load(f)
 
-# Separate questions and answers
+# Combine all FAQ pairs into one list
+faq_data = raw_data['deposit'] + raw_data['orders'] + raw_data['policy']
+
+# Extract Q&A for embedding
 faq_questions = [q for q, a in faq_data]
 faq_answers = [a for q, a in faq_data]
-
-# Create and store the question embeddings ONCE
 faq_embeddings = model.encode(faq_questions)
 
 # Load environment variables from .env file
@@ -521,23 +518,39 @@ def support_faq():
 @app.route('/support/ask', methods=['GET', 'POST'])
 def support_ask():
     answer = None
+    question = None  # ✅ Define it at the top
 
     if request.method == 'POST':
-        user_question = request.form['question']
-        user_embedding = model.encode([user_question])
-
-        # Compare with existing FAQ embeddings
+        question = request.form['question']
+        user_embedding = model.encode([question])
         scores = cosine_similarity(user_embedding, faq_embeddings)[0]
         best_idx = scores.argmax()
         confidence = scores[best_idx]
 
-        # Threshold can be adjusted (0.6 to 0.8)
         if confidence > 0.65:
             answer = faq_answers[best_idx]
         else:
-            answer = "Sorry, I couldn’t find a good match. Please contact support."
+            answer = "🤔 Sorry, I couldn’t find a good answer. Please contact support."
 
-    return render_template('ask_support.html', answer=answer)
+    with open('faq_data.json', 'r') as f:
+        data = json.load(f)
+
+    return render_template(
+        "ask_support.html",
+        question=question,
+        answer=answer,
+        deposit=data["deposit"],
+        orders=data["orders"],
+        policy=data["policy"]
+    )
+
+
+
+# @app.route('/support/ask', methods=['GET', 'POST'])
+# def support_ask():
+#     with open('faq_data.json', 'r') as f:
+#         data = json.load(f)
+#     return render_template("faq.html", deposit=data["deposit"], orders=data["orders"], policy=data["policy"])
 
 
 if __name__ == '__main__':
