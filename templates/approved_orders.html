@@ -2,25 +2,33 @@
 <html>
 <head>
     <title>Approved Orders</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>✅ Approved Orders</h2>
-    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
-    <hr>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-success">✅ Approved Orders</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        </div>
 
-    {% if orders %}
-        <ul>
-        {% for order in orders %}
-            <li>
-                <strong>Order ID:</strong> {{ order.order_id }} |
-                <strong>Amount:</strong> ${{ order.amount }} |
-                <strong>Status:</strong> {{ order.status }}
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No approved orders yet.</p>
-    {% endif %}
+        {% if orders %}
+            <div class="row g-3">
+                {% for order in orders %}
+                    <div class="col-md-6">
+                        <div class="card border-success shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title mb-2">Order ID: <code>{{ order.order_id }}</code></h5>
+                                <p class="card-text mb-1"><strong>Amount:</strong> ${{ order.amount }}</p>
+                                <span class="badge bg-success">Approved</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">No approved orders yet.</div>
+        {% endif %}
+    </div>
 </body>
 </html>

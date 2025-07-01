@@ -4,23 +4,31 @@
     <title>Rejected Orders</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>❌ Rejected Orders</h2>
-    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
-    <hr>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="text-danger">❌ Rejected Orders</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
 
-    {% if orders %}
-        <ul>
-        {% for order in orders %}
-            <li>
-                <strong>Order ID:</strong> {{ order.order_id }} |
-                <strong>Amount:</strong> ${{ order.amount }} |
-                <strong>Status:</strong> {{ order.status }}
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No rejected orders.</p>
-    {% endif %}
+        <hr>
+
+        {% if orders %}
+            <div class="list-group">
+                {% for order in orders %}
+                    <div class="list-group-item">
+                        <p class="mb-1"><strong>Order ID:</strong> {{ order.order_id }}</p>
+                        <p class="mb-1"><strong>Amount:</strong> ${{ order.amount }}</p>
+                        <p class="mb-0"><strong>Status:</strong> {{ order.status }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No rejected orders.
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>
+

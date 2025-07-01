@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Support - FAQ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <h2 class="mb-4 text-center">💬 Frequently Asked Questions (FAQ)</h2>
+
+    <!-- Deposit -->
+    <div class="accordion mb-4" id="faqDeposit">
+        <h4 class="mb-3 text-primary">📥 Deposit</h4>
+        {% for q, a in deposit %}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#d{{ loop.index }}">
+                    {{ q }}
+                </button>
+            </h2>
+            <div id="d{{ loop.index }}" class="accordion-collapse collapse">
+                <div class="accordion-body">{{ a }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Orders -->
+    <div class="accordion mb-4" id="faqOrders">
+        <h4 class="mb-3 text-success">🛒 Orders</h4>
+        {% for q, a in orders %}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#o{{ loop.index }}">
+                    {{ q }}
+                </button>
+            </h2>
+            <div id="o{{ loop.index }}" class="accordion-collapse collapse">
+                <div class="accordion-body">{{ a }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Policy -->
+    <div class="accordion mb-4" id="faqPolicy">
+        <h4 class="mb-3 text-danger">📃 Policy</h4>
+        {% for q, a in policy %}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p{{ loop.index }}">
+                    {{ q }}
+                </button>
+            </h2>
+            <div id="p{{ loop.index }}" class="accordion-collapse collapse">
+                <div class="accordion-body">{{ a }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

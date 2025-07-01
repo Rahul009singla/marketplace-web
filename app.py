@@ -7,10 +7,31 @@ import string
 import os
 import stripe
 import uuid
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Load the model only once
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Your FAQ base data (feel free to expand it)
+faq_data = [
+    ("What payment methods are supported?", "We support Stripe for credit/debit card payments."),
+    ("Can I pay with PayPal or crypto?", "Currently we only support Stripe."),
+    ("How do I recharge?", "Go to Recharge Wallet, enter the amount, and pay via Stripe."),
+    ("How to order?", "Choose an upvote package, enter your Reddit link, and submit."),
+    ("What's the refund policy?", "If we reject your order, the amount is refunded to your wallet.")
+]
+
+# Separate questions and answers
+faq_questions = [q for q, a in faq_data]
+faq_answers = [a for q, a in faq_data]
+
+# Create and store the question embeddings ONCE
+faq_embeddings = model.encode(faq_questions)
 
 # Load environment variables from .env file
 load_dotenv()
-print("✅ Loaded MONGO_URI:", os.getenv("MONGO_URI"))
+print("Loaded MONGO_URI:", os.getenv("MONGO_URI"))
 
 
 # Stripe setup
@@ -24,10 +45,10 @@ app.secret_key = 'secret123'
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "adminpass")
 
-# ✅ MongoDB setup (corrected)
+# MongoDB setup
 mongo_uri = os.getenv("MONGO_URI")
 if not mongo_uri:
-    raise ValueError("❌ MONGO_URI is not set. Please check your .env file.")
+    raise ValueError("MONGO_URI is not set. Please check your .env file.")
 
 client = MongoClient(mongo_uri)
 db = client["marketplace_bot"]
@@ -464,6 +485,59 @@ def assign_order_manual():
         return redirect(url_for('admin_dashboard'))
 
     return render_template('assign_order.html', users=users_list)
+
+@app.route('/support/faq')
+def support_faq():
+    deposit = [
+        ("What payment methods are supported?", "We support Stripe for credit/debit card payments. All payments are encrypted and processed instantly."),
+        ("Can I pay with another method? Such as PayPal", "We currently do not support PayPal or direct crypto. Contact support for manual options."),
+        ("Can I deposit with BNB or other BEP20 tokens?", "No. We do not accept crypto directly. Please use Stripe."),
+        ("I’ve just deposited, and the balance still hasn’t been added yet", "Wallet balances are applied automatically. If it’s delayed, contact support with your payment ID.")
+    ]
+
+    orders = [
+        ("How to order?", "Go to 'Buy Upvotes', choose a package, enter your Reddit URL, and submit."),
+        ("When do you start sending upvotes/downvotes?", "Usually within 1–15 minutes after approval."),
+        ("What does upvote speed actually mean?", "It means how fast votes are delivered. Slower speeds are safer."),
+        ("What are the order statuses?", "Pending (awaiting review), Approved (processing), Rejected (refunded)."),
+        ("What types of accounts do you use?", "We use aged, karma-rich Reddit accounts for better results."),
+        ("Can my account get shadowbanned or banned?", "It’s rare, but possible. Avoid spammy content."),
+        ("Can you give me advice for Reddit marketing?", "Yes, contact support with your goals and niche."),
+        ("Should I send upvotes to posts more than 1 day old?", "No. New posts within 6–12 hours perform best."),
+        ("How to buy Reddit upvotes again?", "Just go to 'Buy Upvotes' on your dashboard."),
+        ("I want to boost multiple submissions — is it possible?", "Yes. Contact support for bulk campaigns or discounts.")
+    ]
+
+    policy = [
+        ("What is the TAT?", "TAT means Turnaround Time. Most orders complete in 1 to 6 hours."),
+        ("What is the Refund Policy?", "If we reject your order, the amount is credited back to your wallet."),
+        ("Before You Submit Links", "Ensure you submit valid Reddit post URLs. Avoid NSFW or banned subreddits.")
+    ]
+
+    return render_template("faq.html", deposit=deposit, orders=orders, policy=policy)
+
+
+
+@app.route('/support/ask', methods=['GET', 'POST'])
+def support_ask():
+    answer = None
+
+    if request.method == 'POST':
+        user_question = request.form['question']
+        user_embedding = model.encode([user_question])
+
+        # Compare with existing FAQ embeddings
+        scores = cosine_similarity(user_embedding, faq_embeddings)[0]
+        best_idx = scores.argmax()
+        confidence = scores[best_idx]
+
+        # Threshold can be adjusted (0.6 to 0.8)
+        if confidence > 0.65:
+            answer = faq_answers[best_idx]
+        else:
+            answer = "Sorry, I couldn’t find a good match. Please contact support."
+
+    return render_template('ask_support.html', answer=answer)
 
 
 if __name__ == '__main__':
