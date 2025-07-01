@@ -7,24 +7,11 @@ import string
 import os
 import stripe
 import uuid
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+from ml_support import model, faq_answers, faq_embeddings
 import json
+from sklearn.metrics.pairwise import cosine_similarity
 
-# Load model
-model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Load data
-with open('faq_data.json') as f:
-    raw_data = json.load(f)
-
-# Combine all FAQ pairs into one list
-faq_data = raw_data['deposit'] + raw_data['orders'] + raw_data['policy']
-
-# Extract Q&A for embedding
-faq_questions = [q for q, a in faq_data]
-faq_answers = [a for q, a in faq_data]
-faq_embeddings = model.encode(faq_questions)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -543,15 +530,6 @@ def support_ask():
         orders=data["orders"],
         policy=data["policy"]
     )
-
-
-
-# @app.route('/support/ask', methods=['GET', 'POST'])
-# def support_ask():
-#     with open('faq_data.json', 'r') as f:
-#         data = json.load(f)
-#     return render_template("faq.html", deposit=data["deposit"], orders=data["orders"], policy=data["policy"])
-
 
 if __name__ == '__main__':
     print("✅ Flask app is starting...")
